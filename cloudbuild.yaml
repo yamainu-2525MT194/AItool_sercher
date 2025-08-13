@@ -1,0 +1,34 @@
+steps:
+# --- ステップ 1: Pythonの依存関係をインストール ---
+# ビルドプロセス内でテストを実行するために、まず必要なライブラリをインストールします。
+- name: 'gcr.io/cloud-builders/pip'
+  args: ['install', '-r', 'backend/requirements.txt']
+  id: 'Install Dependencies'
+
+# --- ステップ 2: 自動テストを実行 ---
+# 'pytest'コマンドを使って、'backend/main_test.py'ファイル内のテストを実行します。
+# このステップが失敗すると、パイプラインはここで停止します。
+- name: 'python'
+  entrypoint: 'pytest'
+  args: ['backend/main_test.py']
+  id: 'Run Tests'
+
+# --- ステップ 3: Cloud Runへデプロイ ---
+# テストが成功した場合にのみ、このステップが実行されます。
+# gcloudコマンドを使い、バックエンドのソースコードをCloud Runにデプロイします。
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gcloud'
+  args:
+    - 'run'
+    - 'deploy'
+    - 'ai-news-api' # あなたのCloud Runサービス名
+    - '--source=./backend'
+    - '--platform=managed'
+    - '--region=asia-northeast1'
+    - '--allow-unauthenticated'
+    - '--set-env-vars=GEMINI_API_KEY=${_GEMINI_API_KEY}'
+  id: 'Deploy to Cloud Run'
+
+# Cloud Buildトリガーで設定したシークレット変数をここで使用することを定義
+substitutions:
+  _GEMINI_API_KEY: ''
