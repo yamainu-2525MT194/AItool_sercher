@@ -1,0 +1,133 @@
+/* --- ver 5.0: UI/UX Final Polish --- */
+
+/* 基本設定 */
+:root {
+    --primary-color: #007bff;
+    --text-color: #212529;
+    --secondary-text-color: #495057;
+    --background-color: #f8f9fa;
+    --card-background-color: #ffffff;
+    --border-color: #e9ecef;
+    --header-height: 60px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.7;
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* ヘッダー & ナビゲーション */
+.app-header {
+    background-color: var(--card-background-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 1.5em;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.header-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+}
+.header-nav a {
+    margin: 0 12px;
+    text-decoration: none;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+    transition: color 0.2s;
+    padding: 0.5em 0;
+}
+.header-nav a:hover {
+    color: var(--primary-color);
+}
+.header-nav a.active {
+    color: var(--primary-color);
+    font-weight: bold;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+/* メインコンテンツ */
+main.container {
+    max-width: 1200px;
+    margin: 2em auto;
+    padding: 0 1.5em;
+}
+
+h1 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 1em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.8em;
+}
+h2 {
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5em;
+    margin-top: 2em;
+    font-size: 1.6em;
+}
+
+/* ツールマップページ */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5em;
+}
+.category-section {
+    background-color: var(--card-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5em;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.tool-card { border-top: 1px solid var(--border-color); padding-top: 1.5em; margin-top: 1.5em; }
+.tool-card:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+.tool-name { font-size: 1.25em; font-weight: bold; }
+.tool-name a { text-decoration: none; color: var(--text-color); }
+.tool-name a:hover { text-decoration: underline; }
+.section-title { font-weight: bold; font-size: 0.9em; margin-top: 1em; color: var(--secondary-text-color); }
+.section-content { color: var(--secondary-text-color); margin-top: 0.3em; }
+
+
+/* 最新ニュースページ */
+.news-container-wrapper { max-width: 800px; margin: 0 auto; }
+.filter-container { text-align: center; margin-bottom: 2em; }
+.filter-btn { background-color: #fff; border: 1px solid var(--border-color); border-radius: 20px; padding: 0.5em 1.2em; margin: 0 0.3em; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+.filter-btn.active { background-color: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+.news-card { background-color: var(--card-background-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5em; margin-bottom: 1.5em; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1em; }
+.source-tag { font-weight: bold; background-color: #e7f5ff; color: #1971c2; padding: 0.3em 0.8em; border-radius: 1em; font-size: 0.85em; }
+.category-tag { font-weight: 500; color: #868e96; font-size: 0.85em; }
+.card-title { font-size: 1.25em; margin: 0 0 0.75em 0; }
+.card-summary-title { font-weight: bold; color: var(--secondary-text-color); font-size: 0.9em; margin-top: 1em; }
+.card-summary { color: var(--secondary-text-color); }
+.card-link { display: inline-block; margin-top: 1em; text-decoration: none; color: #28a745; font-weight: bold; }
+
+/* 静的ページ */
+.static-page-container { max-width: 800px; margin: 2em auto; padding: 2.5em; background-color: var(--card-background-color); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.static-page-container h1, .static-page-container h2 { border-bottom: none; text-align: left;}
+code { background-color: #e9ecef; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+pre { background-color: #e9ecef; padding: 1em; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+
+/* ローディング表示 */
+.loader { text-align: center; padding: 4em; font-size: 1.2em; color: #6c757d; }
+.loader::before { content: ''; display: inline-block; width: 24px; height: 24px; border: 3px solid #ccc; border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* スマートフォン対応 (レスポンシブデザイン) */
+@media (max-width: 768px) {
+    .container { padding: 0 1em; }
+    .app-header { flex-direction: column; height: auto; padding: 1em; }
+    .header-nav { margin-top: 1em; border-top: 1px solid var(--border-color); padding-top: 1em; width: 100%; display: flex; justify-content: center; }
+    .header-nav a { margin: 0 10px; }
+    .category-grid { grid-template-columns: 1fr; }
+}

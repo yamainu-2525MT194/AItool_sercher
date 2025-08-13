@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使い方 - AI PM Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="header-placeholder" class="app-header"></header>
+    
+    <main class="container">
+        <div class="static-page-container">
+            <h1>使い方マニュアル</h1>
+            
+            <h2>ダッシュボード画面</h2>
+            <p>このアプリケーションのメイン画面（<a href="/news.html">最新ニュース</a>）です。世界中のAI関連情報源から最新の動向を自動で収集し、2つの主要なセクションで表示します。</p>
+            
+            <h3>注目企業ランキング</h3>
+            <p>収集した最新ニュース記事の中で、主要なAI企業（OpenAI, Googleなど）がどれだけ話題に上がっているかをカウントし、ランキング形式で表示します。市場の注目度を素早く把握できます。</p>
+
+            <h3>最新ニュースフィード</h3>
+            <p>複数のニュースサイトや公式ブログから最新のトップ5ニュースを表示します。各ニュースには、Gemini APIが生成した「プロダクトマネージャーとしての重要性」に関する分析が付与されています。</p>
+            
+            <h3>カテゴリフィルター</h3>
+            <p>ニュースフィードの上部にあるボタン（「すべて」「資金調達」など）をクリックすることで、表示するニュースをカテゴリで絞り込むことができます。</p>
+
+            <h2>ツールマップ画面</h2>
+            <p><a href="/">ツールマップ</a>ページでは、主要なAIツールをカテゴリ別に整理して表示しています。各ツールの概要や主な使用場面を確認でき、市場の全体像（ランドスケープ）を把握するのに役立ちます。</p>
+
+            <h2>情報の更新について</h2>
+            <p>このダッシュボードの情報は、<strong>Cloud Scheduler</strong>によって約12時間ごとに自動で更新されます。手動で最新情報に更新したい場合は、開発仕様書に記載された手順でキャッシュを手動更新してください。</p>
+        </div>
+    </main>
+    
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バージョン管理 - AI PM Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="header-placeholder" class="app-header"></header>
+
+    <main class="container">
+        <div class="static-page-container">
+            <h1>バージョン管理</h1>
+            
+            <div class="version-log">
+                <h2>ver 5.1 <span class="date">(2025/08/12)</span></h2>
+                <ul>
+                    <li>バックエンドの<code>main.py</code>に残っていたバグ（<code>feedparser</code>ライブラリの不正な引数）を修正し、ニュースフィードが安定して表示されるように最終修正。</li>
+                    <li>静的ツールマップと動的ニュースフィードの機能を1つのバックエンドに統合する最終コードを確定。</li>
+                </ul>
+            </div>
+            <div class="version-log">
+                <h2>ver 5.0 <span class="date">(2025/08/12)</span></h2>
+                <ul>
+                    <li>UI/UXを全面的に改善（レスポンシブデザイン対応）。</li>
+                    <li>ヘッダーとCSSを共通ファイル化し、メンテナンス性を向上。</li>
+                </ul>
+            </div>
+            
+            <div class="version-log">
+                <h2>ver 4.0 <span class="date">(2025/08/12)</span></h2>
+                <ul>
+                    <li>Cloud Runのコールドスタート対策として、最小インスタンスを1に設定。</li>
+                    <li>Cloud SchedulerとCloud Runのタイムアウト時間を延長し、安定性を向上。</li>
+                </ul>
+            </div>
+    
+            <div class="version-log">
+                <h2>ver 3.0 <span class="date">(2025/08/11)</span></h2>
+                <ul>
+                    <li>キャッシュ機能（Cloud Scheduler, Firestore）を導入し、表示の高速化とAPI利用の効率化を実現。</li>
+                    <li>Googleトレンドの不安定さを解消するため、トレンド機能を「注目企業ランキング」に変更。</li>
+                </ul>
+            </div>
+    
+            <div class="version-log">
+                <h2>ver 2.0 <span class="date">(2025/08/11)</span></h2>
+                <ul>
+                    <li>ニュースの自動カテゴリ分類機能を追加。</li>
+                    <li>AIによる分析を、単なる要約から「PM視点での重要性」分析に変更。</li>
+                    <li>UIをダッシュボード形式に刷新し、カテゴリフィルターを追加。</li>
+                </ul>
+            </div>
+    
+            <div class="version-log">
+                <h2>ver 1.0 <span class="date">(2025/08/10)</span></h2>
+                <ul>
+                    <li>主要なAIニュースサイトのRSSフィードから最新情報を収集する基本機能を実装。</li>
+                    <li>バックエンドをCloud Run、フロントエンドをFirebase Hostingで構築。</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    
+    <script src="app.js"></script>
+</body>
+</html>
