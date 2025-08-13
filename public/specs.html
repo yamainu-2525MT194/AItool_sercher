@@ -12,60 +12,72 @@
     <main class="container">
         <div class="static-page-container">
             <h1>「AI Product Manager Dashboard」開発仕様書</h1>
-            <p>最終更新日: 2025年8月12日</p>
+            <p>最終更新日: 2025年8月13日</p>
     
             <h2>1. 概要</h2>
             <p>本アプリケーションは、AIプロダクトマネージャーを目指すユーザーが必要とする、最新のAI関連情報を戦略的な視点から収集・分析し、ダッシュボード形式で提供するWebアプリケーションです。</p>
     
             <h2>2. アーキテクチャ</h2>
-            <p>トップページ(`/`)は静的なツールマップを、`/news.html`ページは動的な最新ニュースを表示します。それぞれがCloud Run上の異なるエンドポイントを呼び出します。</p>
+            <p>ソースコードをGitHubで管理し、`main`ブランチへのプッシュをトリガーとして、Cloud BuildがテストとCloud Runへのデプロイを自動的に実行します。</p>
             
             <h2>3. 技術スタックと利用Googleサービス</h2>
             <ul>
-                <li><strong>バックエンド</strong>: Python, Flask, Gunicorn</li>
-                <li><strong>フロントエンド</strong>: HTML, CSS, JavaScript</li>
+                <li><strong>ソースコード管理</strong>: GitHub</li>
+                <li><strong>CI/CD</strong>: Cloud Build</li>
+                <li><strong>バックエンド</strong>: Python, Flask, Gunicorn (Cloud Run上)</li>
+                <li><strong>フロントエンド</strong>: HTML, CSS, JavaScript (Firebase Hosting上)</li>
                 <li><strong>主要Google Cloudサービス</strong>:
                     <ul>
                         <li><strong>Cloud Run</strong>: バックエンドAPIの実行環境。</li>
                         <li><strong>Firebase Hosting</strong>: フロントエンドのホスティング。</li>
                         <li><strong>Gemini API</strong>: ニュースのPM視点での分析。</li>
-                        <li><strong>Cloud Build / Artifact Registry</strong>: コンテナのビルドと保存。</li>
                     </ul>
                 </li>
             </ul>
     
             <h2>4. 保守・運用手順</h2>
-            <h3>4.1. 認証の再ログイン（セッション切れ対応）</h3>
-            <p>Cloud Shellは一定時間でログアウトします。デプロイ等で認証エラーが出た場合は、以下のコマンドをターミナルで実行してください。</p>
-            
-            <h4>gcloudコマンドの再認証</h4>
-            <pre><code>gcloud auth login --no-auth-browser</code></pre>
-            
-            <h4>firebaseコマンドの再認証</h4>
-            <pre><code>firebase login --no-localhost</code></pre>
-            <p>上記コマンド実行後、ターミナルに表示されるURLをブラウザで開き、画面に表示された認証コードをターミナルに貼り付けてください。</p>
+            <h3>4.1. 開発フロー</h3>
+            <ol>
+                <li>ローカル環境（Cloud Shellなど）でコードを編集・変更します。</li>
+                <li>変更内容をGitでコミットします。<code>git add .</code>, <code>git commit -m "変更内容"</code></li>
+                <li>GitHubの`main`ブランチにプッシュします。<code>git push origin main</code></li>
+                <li>プッシュをトリガーに、Cloud Buildが自動でテストとデプロイを実行します。</li>
+                <li>Cloud Buildの履歴画面で、ビルドが成功したことを確認します。</li>
+            </ol>
+
+            <h3>4.2. GitHubリポジトリとの連携設定</h3>
+            <p>Cloud BuildとGitHubリポジトリを初めて連携させる手順です。</p>
+            <ol>
+                <li>Google Cloudコンソールの「Cloud Build」ページで「トリガー」を選択します。</li>
+                <li>「リポジトリを接続」をクリックし、画面の指示に従ってGitHubアカウントと対象のリポジトリを接続します。</li>
+                <li>「トリガーを作成」をクリックし、`main`ブランチへのプッシュをトリガーとして設定します。</li>
+                <li>構成ファイルとしてリポジトリ内の<code>cloudbuild.yaml</code>を指定します。</li>
+            </ol>
 
             <h2>5. トラブルシューティング</h2>
-            <h3>5.1. デプロイ時に `Container Healthcheck failed` エラーが頻発する</h3>
+            <h3>5.1. Gitの初期設定とプッシュ失敗</h3>
+            <p><strong>症状</strong>: <code>git commit</code>でエラーが出る、または<code>git push</code>で認証に失敗する。</p>
+            <p><strong>原因と解決策</strong>:</p>
             <ul>
-                <li><strong>症状</strong>: `gcloud run deploy` を実行すると、コンテナのヘルスチェックで失敗し、デプロイが完了しない。</li>
-                <li><strong>原因</strong>: プロジェクトのAPIが有効になっていない、権限が不足している、請求先アカウントが有効化されていない、など環境側の問題がほとんど。</li>
-                <li><strong>解決策</strong>:
+                <li><strong>ユーザー情報未設定</strong>: <code>git commit</code>が失敗する場合、Gitにユーザー情報が設定されていません。以下のコマンドで設定してください。
+                    <pre><code>git config --global user.name "あなたの名前"\ngit config --global user.email "あなたのアドレス"</code></pre>
+                </li>
+                <li><strong>パスワード認証の廃止</strong>: <code>git push</code>で認証に失敗する場合、GitHubはパスワード認証をサポートしていません。代わりに**パーソナルアクセストークン**を使用する必要があります。
                     <ol>
-                        <li>Cloud Run, Cloud Build, Artifact Registry 等の関連APIが有効になっているか確認する。</li>
-                        <li>IAMで主要なサービスアカウントに「編集者」などの適切な権限があるか確認する。</li>
-                        <li>請求先アカウントが有効（アクティベート済み）になっているか確認する。</li>
-                        <li>上記全てを確認しても解決しない場合、新しいクリーンなプロジェクトで試すのが最も確実。</li>
+                        <li><a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">GitHubのトークン設定ページ</a>にアクセスします。</li>
+                        <li>「Generate new token (classic)」を選択します。</li>
+                        <li>Noteに名前を付け、Expiration（有効期限）を選択し、Scope（権限）で「<strong>repo</strong>」にチェックを入れます。</li>
+                        <li>生成されたトークン（<code>ghp_...</code>）をコピーします。</li>
+                        <li><code>git push</code>実行時にパスワードを求められたら、この**トークンを貼り付け**てください。</li>
                     </ol>
                 </li>
             </ul>
-
-            <h3>5.2. RSSフィード取得時に `TypeError: ... unexpected keyword argument 'socket_timeout'` エラーが出る</h3>
-            <ul>
-                <li><strong>症状</strong>: Cloud Runのログに `socket_timeout` に関するTypeErrorが出力され、ニュースが表示されない。</li>
-                <li><strong>原因</strong>: バックエンドの`main.py`内で、`feedparser`ライブラリがサポートしていない`socket_timeout`引数を指定してしまっている。</li>
-                <li><strong>解決策</strong>: `main.py`内の`feedparser.parse()`の呼び出しから、`socket_timeout`引数を完全に削除する。</li>
-            </ul>
+            
+            <h3>5.2. Cloud Shellでの認証エラー (localhost接続拒否)</h3>
+            <p><strong>症状</strong>: <code>gcloud auth login</code> や <code>firebase login</code> を実行した際、ブラウザで<code>localhost</code>への接続が拒否され、認証が完了できない。</p>
+            <p><strong>原因</strong>: Cloud Shellはクラウド上のリモート環境であり、ローカルPCのブラウザから直接<code>localhost</code>としてアクセスできないためです。</p>
+            <p><strong>解決策</strong>: <code>localhost</code>を使用しない認証オプションをコマンドに追加します。</p>
+            <pre><code>gcloud auth login --no-auth-browser\nfirebase login --no-localhost</code></pre>
             </div>
     </main>
 
