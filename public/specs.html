@@ -15,7 +15,7 @@
             <p>最終更新日: 2025年8月14日</p>
     
             <h2>1. 概要</h2>
-            <p>本アプリケーションは、AIプロダクトマネージャーを目指すユーザーが必要とする情報を戦略的な視点から提供するWebアプリケーションです。最新のAIツール市場の俯瞰、重要ニュースの分析、ツール提供企業の基礎情報などをダッシュボード形式で提供します。</p>
+            <p>本アプリケーションは、AIプロダクトマネージャーを目指すユーザーが必要とする情報を戦略的な視点から提供するWebアプリケーションです。最新のAIツール市場の俯瞰、重要ニュースの分析、ツール提供企業の基礎情報、そしてデータに関する対話型AIアシスタント機能などを提供します。</p>
     
             <h2>2. アーキテクチャ</h2>
             <p>Google Cloudのサーバーレスサービスを中心に構築されています。ソースコードはGitHubで管理され、`main`ブランチへのプッシュをトリガーとして、Cloud BuildがテストとCloud Runへのデプロイを自動的に実行するCI/CDパイプラインも構成されています。</p>
@@ -42,7 +42,7 @@
                 </li>
                  <li><strong>利用外部API</strong>:
                     <ul>
-                        <li><strong>Gemini API</strong>: ニュースのPM視点での分析。</li>
+                        <li><strong>Gemini API (<code>gemini-1.5-flash-latest</code>)</strong>: ニュース分析およびRAGアシスタント機能の中核。</li>
                         <li><strong>国税庁 法人番号システムWeb-API</strong>: 企業情報の取得。</li>
                         <li>各種RSSフィード</li>
                     </ul>
@@ -58,7 +58,10 @@
                 <dd>複数のRSSフィードから最新ニュースを取得し、Gemini APIで重要度分析と要約を行ったトップ5のニュースを返却します。</dd>
 
                 <dt><code>GET /api/corporate_info</code></dt>
-                <dd>企業名（<code>name</code>クエリパラメータ）を受け取り、国税庁APIを呼び出して企業の公式情報を返却します。(注: 現在はAPIキー認可待ちのため、`main.py`内でコメントアウト中)</dd>
+                <dd>企業名（<code>name</code>クエリパラメータ）を受け取り、国税庁APIを呼び出して企業の公式情報を返却します。(注: 現在はAPIキー認可待ちのため、`main.py`内でロジックは有効化済みですが利用には注意が必要です)</dd>
+
+                <dt><code>POST /api/chat</code></dt>
+                <dd>ユーザーからの質問(<code>question</code>)を受け取り、RAG(検索拡張生成)を用いて回答を生成します。ダッシュボード内の関連情報をコンテキストとして利用し、関連情報がない場合はGeminiの汎用知識で応答するハイブリッド型です。</dd>
             </dl>
     
             <h2>4. 保守・運用手順</h2>
@@ -93,8 +96,11 @@
                 <li><strong>原因A: 依存ライブラリの不足 (503エラーの主原因)</strong>
                     <br><code>main.py</code>で<code>import</code>しているライブラリが、<code>backend/requirements.txt</code>に記載されていない場合、サーバーは起動に失敗しクラッシュします。Cloud Runの「ログ」で<code>ImportError</code>が出ていないか確認し、不足しているライブラリ（例: <code>google-cloud-secret-manager</code>）を<code>requirements.txt</code>に追記してください。
                 </li>
-                <li><strong>原因B: Cloud Buildの強力なキャッシュ</strong>
-                    <br><code>requirements.txt</code>等に触らず<code>data.py</code>のみを変更した場合など、Cloud Buildが変更を軽微だと判断し、古いキャッシュを使ってデプロイすることがあります。この場合、Cloud Runサービスに過去の不正な状態が残っている可能性があります。究極の解決策として、サービスを一度完全に削除し、ゼロから再作成することで問題は100%解決します。
+                <li><strong>原因B: Gemini APIモデル名の変更</strong>
+                    <br>APIのアップデートにより、古いモデル名（例: <code>gemini-pro</code>）が利用できなくなり、起動時またはAPI呼び出し時にエラーになることがあります。Cloud Runのログで<code>404 models/... is not found</code>というエラーが出ていないか確認し、コード内のモデル名を新しいもの（例: <code>gemini-1.5-flash-latest</code>）に更新してください。
+                </li>
+                <li><strong>原因C: Cloud Buildの強力なキャッシュ / サービスの状態異常</strong>
+                    <br>軽微な変更だとCloud Buildが古いキャッシュを使ってデプロイしたり、サービスが不正な状態に陥ることが稀にあります。究極の解決策として、サービスを一度完全に削除し、ゼロから再作成することで問題は100%解決します。
                     <pre><code># 1. サービスを削除
 gcloud run services delete ai-product-manager-backend --region=asia-northeast1
 

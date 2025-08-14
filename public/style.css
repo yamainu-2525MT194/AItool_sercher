@@ -271,3 +271,70 @@ pre { background-color: #e9ecef; padding: 1em; border-radius: 5px; white-space: 
     padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+
+/* public/style.css の末尾に追記 */
+
+.chat-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border: 1px solid #e0e0e0;
+}
+
+.chat-container h3 {
+    margin-top: 0;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+#chat-input {
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+}
+
+#chat-submit-btn {
+    border: none;
+    background-color: #4285f4;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#chat-submit-btn:hover {
+    background-color: #3367d6;
+}
+
+#chat-answer-area {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 1rem;
+    min-height: 50px;
+    white-space: pre-wrap; /* 改行を正しく表示するための設定 */
+    line-height: 1.6;
+}
+
+/* public/style.css の末尾に追記 */
+
+/* ---------------------------------- */
+/* バージョン管理ページのリスト表示を修正 */
+/* ---------------------------------- */
+.changelog-entry ul {
+  list-style-type: disc; /* ビュレット（・）を表示します */
+  padding-left: 25px;   /* 左側に余白を設けてインデントさせます */
+}
+
+.changelog-entry li {
+  margin-bottom: 0.8em; /* 各項目の下の余白を調整して見やすくします */
+}

@@ -11,6 +11,18 @@
     
     <main class="container">
         <h1>AI Tool Landscape</h1>
+        <section class="chat-container">
+    <h3>AIアシスタントに質問する</h3>
+    <p>このダッシュボードのデータについて、AIに質問できます。(例: LLMについて要約して)</p>
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="質問を入力してください...">
+        <button id="chat-submit-btn">送信</button>
+    </div>
+    <div id="chat-answer-area">
+        </div>
+</section>
+
+<hr class="section-divider">
         <div id="main-container" class="category-grid">
             <div class="loader">AIツールマップを読み込み中...</div>
         </div>

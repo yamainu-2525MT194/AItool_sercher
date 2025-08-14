@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('main-container')) {
         fetchLandscapeData();
         initializeModal(); // ★モーダル機能の初期化をここで行う
+        initializeChat(); // ★この行を追加
     }
     
     // 最新ニュースページ (news.html) の場合
@@ -254,5 +255,66 @@ async function fetchCorporateInfo(companyName) {
     } catch (error) {
         console.error('Fetch corporate info error:', error);
         modalBody.innerHTML = `<p style="color: red;">エラー: ${error.message}</p>`;
+    }
+}
+
+/**
+ * ===================================================================
+ * RAGチャットボット関連の機能
+ * ===================================================================
+ */
+
+function initializeChat() {
+    const submitBtn = document.getElementById('chat-submit-btn');
+    const inputField = document.getElementById('chat-input');
+
+    if (!submitBtn || !inputField) return;
+
+    submitBtn.addEventListener('click', handleChatSubmit);
+    
+    // Enterキーでも送信できるようにする
+    inputField.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            handleChatSubmit();
+        }
+    });
+}
+
+async function handleChatSubmit() {
+    const inputField = document.getElementById('chat-input');
+    const answerArea = document.getElementById('chat-answer-area');
+    
+    const question = inputField.value.trim();
+    if (!question) {
+        answerArea.textContent = '質問を入力してください。';
+        return;
+    }
+
+    answerArea.textContent = 'AIが回答を生成中です...';
+    inputField.disabled = true; // 送信中は入力を無効化
+    document.getElementById('chat-submit-btn').disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/api/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ question: question }),
+        });
+
+        if (!response.ok) {
+            throw new Error('APIサーバーからの応答エラー');
+        }
+
+        const data = await response.json();
+        answerArea.textContent = data.answer;
+
+    } catch (error) {
+        console.error('Chat error:', error);
+        answerArea.textContent = 'エラーが発生しました。回答を取得できませんでした。';
+    } finally {
+        inputField.disabled = false; // 処理完了後、入力を再度有効化
+        document.getElementById('chat-submit-btn').disabled = false;
     }
 }
