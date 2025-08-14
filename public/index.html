@@ -3,19 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Tool Landscape</title>
+    <title>AI PM Dashboard - Home</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* このページ専用のスタイル */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5em;
+            margin-top: 2em;
+        }
+        .portal-card {
+            background-color: var(--card-background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5em;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: block;
+        }
+        .portal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .portal-card h2 {
+            margin-top: 0;
+            font-size: 1.4em;
+            color: var(--primary-color);
+            border: none;
+            padding: 0;
+        }
+        .portal-card p {
+            color: var(--secondary-text-color);
+        }
+    </style>
 </head>
 <body>
     <header id="header-placeholder" class="app-header"></header>
     
     <main class="container">
-        <h1>AI Tool Landscape</h1>
-        <div id="main-container" class="category-grid">
-            <div class="loader">AIツールマップを読み込み中...</div>
+        <h1>AI Product Manager Dashboard</h1>
+        <p style="text-align: center; font-size: 1.1em; color: var(--secondary-text-color);">AIプロダクト開発に必要な情報を集約・分析するダッシュボード</p>
+        
+        <div class="portal-grid">
+            <a href="/landscape.html" class="portal-card">
+                <h2>ツールマップ</h2>
+                <p>主要なAIツールをカテゴリ別に整理。各ツールの概要と使用場面を把握し、市場の全体像を理解します。</p>
+            </a>
+            <a href="/news.html" class="portal-card">
+                <h2>最新ニュース</h2>
+                <p>世界中のAI関連ニュースを自動収集し、PM視点でAIが分析。日々の細かなトレンドを追いかけます。</p>
+            </a>
+            <a href="/manual.html" class="portal-card">
+                <h2>使い方</h2>
+                <p>このダッシュボードの各機能の使い方や、情報の見方について解説します。</p>
+            </a>
+            <a href="/specs.html" class="portal-card">
+                <h2>開発仕様</h2>
+                <p>アプリケーションの技術スタック、アーキテクチャ、保守手順などをまとめた技術ドキュメントです。</p>
+            </a>
+            <a href="/changelog.html" class="portal-card">
+                <h2>バージョン管理</h2>
+                <p>このアプリケーションの機能改善の歴史を記録しています。</p>
+            </a>
+            <a href="/gcp_lessons.html" class="portal-card">
+                <h2>GCP学習メモ</h2>
+                <p>このアプリ開発を通して学んだ、GCPのサーバーレスアーキテクチャに関する知識をまとめています。</p>
+            </a>
         </div>
     </main>
     
+  <div id="corporate-info-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-company-name">法人情報</h2>
+          <span class="modal-close-button">&times;</span>
+        </div>
+        <div id="modal-body-content" class="modal-body">
+          <div class="loader"></div>
+        </div>
+      </div>
+    </div>
+    
     <script src="app.js"></script>
-</body>
+  </body>
 </html>

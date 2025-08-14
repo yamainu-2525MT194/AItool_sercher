@@ -1,0 +1,7 @@
+filename: cloudbuild.yaml
+github:
+  name: AItool_sercher
+  owner: yamainu-2525MT194
+  push:
+    branch: ^main$
+# substitutionsセクションは削除

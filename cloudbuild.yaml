@@ -1,34 +1,35 @@
 steps:
-# --- ステップ 1: Pythonの依存関係をインストール ---
-# ビルドプロセス内でテストを実行するために、まず必要なライブラリをインストールします。
-- name: 'gcr.io/cloud-builders/pip'
-  args: ['install', '-r', 'backend/requirements.txt']
-  id: 'Install Dependencies'
+  # 1. Install dependencies
+  - name: 'python:3.9'
+    entrypoint: 'pip'
+    args: ['install', '-r', 'backend/requirements.txt', '--user']
 
-# --- ステップ 2: 自動テストを実行 ---
-# 'pytest'コマンドを使って、'backend/main_test.py'ファイル内のテストを実行します。
-# このステップが失敗すると、パイプラインはここで停止します。
-- name: 'python'
-  entrypoint: 'pytest'
-  args: ['backend/main_test.py']
-  id: 'Run Tests'
+  # 2. Run tests
+  - name: 'python:3.9'
+    entrypoint: 'python'
+    args: ['-m', 'pytest', 'backend/']
 
-# --- ステップ 3: Cloud Runへデプロイ ---
-# テストが成功した場合にのみ、このステップが実行されます。
-# gcloudコマンドを使い、バックエンドのソースコードをCloud Runにデプロイします。
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: 'gcloud'
-  args:
-    - 'run'
-    - 'deploy'
-    - 'ai-news-api' # あなたのCloud Runサービス名
-    - '--source=./backend'
-    - '--platform=managed'
-    - '--region=asia-northeast1'
-    - '--allow-unauthenticated'
-    - '--set-env-vars=GEMINI_API_KEY=${_GEMINI_API_KEY}'
-  id: 'Deploy to Cloud Run'
+  # 3. Deploy to Cloud Run
+  # This step deploys the container image to Cloud Run.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ai-product-manager-backend' # Your Cloud Run service name
+      - '--source=./backend'
+      - '--platform=managed'
+      - '--region=asia-northeast1' # Your service region
+      - '--allow-unauthenticated'
+      - '--project=$PROJECT_ID'
+      # Pass secrets as environment variables
+      - '--update-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest,CORPORATE_API_KEY=CORPORATE_API_KEY:latest' # <--- 変更点
+    secretEnv: ['GEMINI_API_KEY', 'CORPORATE_API_KEY'] # <--- 変更点
 
-# Cloud Buildトリガーで設定したシークレット変数をここで使用することを定義
-substitutions:
-  _GEMINI_API_KEY: ''
+# Define the secrets to be used in the build steps.
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/GEMINI_API_KEY/versions/latest
+    env: 'GEMINI_API_KEY'
+  - versionName: projects/$PROJECT_ID/secrets/CORPORATE_API_KEY/versions/latest # <--- 変更点
+    env: 'CORPORATE_API_KEY'

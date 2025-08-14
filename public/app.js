@@ -1,21 +1,26 @@
 /**
  * ===================================================================
- * メインロジック：ページの読み込みが完了したら、ヘッダーを読み込み、
+ * メインロジック：ページの読み込みが完了したら、共通ヘッダーを読み込み、
  * ページの種類を判別して、対応するデータ取得関数を呼び出す。
  * ===================================================================
  */
 document.addEventListener('DOMContentLoaded', () => {
     loadHeader();
 
+    // ツールマップページ (landscape.html) の場合のみ、関連機能を初期化
     if (document.getElementById('main-container')) {
-        fetchLandscapeData(); // ツールマップページ用の関数
+        fetchLandscapeData();
+        initializeModal(); // ★モーダル機能の初期化をここで行う
     }
+    
+    // 最新ニュースページ (news.html) の場合
     if (document.getElementById('news-container')) {
-        fetchNewsData(); // 最新ニュースページ用の関数
+        fetchNewsData();
     }
 });
 
-const API_URL = 'https://ai-news-api-501254184747.asia-northeast1.run.app';
+// バックエンドAPIの基本URL
+const API_URL = 'https://ai-product-manager-backend-501254184747.asia-northeast1.run.app';
 
 /**
  * ===================================================================
@@ -33,17 +38,14 @@ async function loadHeader() {
         
         headerPlaceholder.innerHTML = `<a href="/" class="header-title">AI PM Dashboard</a><div class="header-nav">${headerHtml}</div>`;
 
-        // 現在表示しているページに応じて、ナビゲーションリンクのアクティブ状態を切り替える
         const currentPagePath = window.location.pathname;
         const navLinks = headerPlaceholder.querySelectorAll('.header-nav a');
+        
         navLinks.forEach(link => {
-            const linkPath = link.getAttribute('href');
-            // トップページ（/ または /index.html）の場合の判定
+            const linkPath = link.dataset.path;
             if ((currentPagePath === '/' || currentPagePath.endsWith('/index.html')) && linkPath === '/') {
                 link.classList.add('active');
-            } 
-            // その他のページの場合の判定
-            else if (currentPagePath.endsWith(linkPath) && linkPath !== '/') {
+            } else if (linkPath !== '/' && currentPagePath.endsWith(linkPath)) {
                 link.classList.add('active');
             }
         });
@@ -58,29 +60,29 @@ async function loadHeader() {
  * ===================================================================
  */
 
-// --- 静的なツールマップページ用 ---
+// --- ツールマップページ (landscape.html) 用 ---
 async function fetchLandscapeData() {
     const mainContainer = document.getElementById('main-container');
     try {
-        const response = await fetch(API_URL); // バックエンドのルートURL (/) を呼び出す
+        const response = await fetch(API_URL); 
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
         
         const toolData = await response.json();
-        mainContainer.innerHTML = ''; // ローディング表示をクリア
+        mainContainer.innerHTML = '';
 
         for (const category in toolData) {
             const section = document.createElement('div');
             section.className = 'category-section';
-            let toolsHtml = `<h2>${category}</h2>`;
+
+            const categoryTitle = document.createElement('h2');
+            categoryTitle.textContent = category;
+            section.appendChild(categoryTitle);
+
             toolData[category].forEach(tool => {
-                toolsHtml += `
-                    <div class="tool-card">
-                        <h3 class="tool-name"><a href="${tool.link}" target="_blank" rel="noopener noreferrer">${tool.name}</a></h3>
-                        <p class="section-title">概要</p><p class="section-content">${tool.summary}</p>
-                        <p class="section-title">主な使用場面</p><p class="section-content">${tool.use_case}</p>
-                    </div>`;
+                const cardElement = createToolCard(tool);
+                section.appendChild(cardElement);
             });
-            section.innerHTML = toolsHtml;
+            
             mainContainer.appendChild(section);
         }
     } catch (error) {
@@ -89,11 +91,35 @@ async function fetchLandscapeData() {
     }
 }
 
-// --- 動的な最新ニュースページ用 ---
+function createToolCard(tool) {
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+
+    card.innerHTML = `
+      <h3 class="tool-name"><a href="${tool.link}" target="_blank" rel="noopener noreferrer">${tool.name}</a></h3>
+      <p class="section-title">概要</p>
+      <p class="section-content">${tool.summary}</p>
+      <p class="section-title">主な使用場面</p>
+      <p class="section-content">${tool.use_case}</p>
+      <div class="tool-footer"></div>
+    `;
+
+    if (tool.company) {
+      const corporateBtn = document.createElement('button');
+      corporateBtn.className = 'corporate-info-btn';
+      corporateBtn.textContent = '企業情報';
+      corporateBtn.dataset.companyName = tool.company;
+      card.querySelector('.tool-footer').appendChild(corporateBtn);
+    }
+
+    return card;
+}
+
+// --- 最新ニュースページ (news.html) 用 ---
 async function fetchNewsData() {
     const newsContainer = document.getElementById('news-container');
     try {
-        const response = await fetch(API_URL + '/api/news'); // /api/news エンドポイントを呼び出す
+        const response = await fetch(API_URL + '/api/news');
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
         
         const data = await response.json();
@@ -143,4 +169,90 @@ function filterByCategory(category) {
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent === category);
     });
+}
+
+/**
+ * ===================================================================
+ * 法人情報モーダル（ポップアップ）関連の機能
+ * ===================================================================
+ */
+
+// モーダル機能の初期化（イベントリスナーの設定など）
+function initializeModal() {
+    const modal = document.getElementById('corporate-info-modal');
+    if (!modal) return; // モーダルがHTMLに存在しないページでは何もしない
+
+    const closeModalButton = modal.querySelector('.modal-close-button');
+
+    // 「企業情報」ボタンが押された時のイベントを監視
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('corporate-info-btn')) {
+            const companyName = event.target.dataset.companyName;
+            openModal(companyName);
+        }
+    });
+
+    // 閉じるボタンが押された時の処理
+    closeModalButton.addEventListener('click', closeModal);
+    // モーダルの外側がクリックされた時の処理
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+}
+
+// モーダルを開く
+function openModal(companyName) {
+    const modal = document.getElementById('corporate-info-modal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    const modalHeader = modal.querySelector('#modal-company-name');
+    if (modalHeader) modalHeader.textContent = '法人情報';
+    
+    const modalBody = modal.querySelector('#modal-body-content');
+    if (modalBody) modalBody.innerHTML = '<div class="loader"></div>';
+
+    fetchCorporateInfo(companyName);
+}
+
+// モーダルを閉じる
+function closeModal() {
+    const modal = document.getElementById('corporate-info-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+// バックエンドAPIを叩いて法人情報を取得・表示する
+async function fetchCorporateInfo(companyName) {
+    const modal = document.getElementById('corporate-info-modal');
+    if (!modal) return;
+
+    const modalHeader = modal.querySelector('#modal-company-name');
+    if (modalHeader) modalHeader.textContent = `「${companyName}」の法人情報`;
+  
+    const modalBody = modal.querySelector('#modal-body-content');
+    if (!modalBody) return;
+
+    try {
+        const response = await fetch(`${API_URL}/api/corporate_info?name=${encodeURIComponent(companyName)}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '情報を取得できませんでした。');
+        }
+        
+        const data = await response.json();
+        
+        modalBody.innerHTML = `
+            <p><strong>法人名:</strong> ${data.name}</p>
+            <p><strong>法人番号:</strong> ${data.corporate_number}</p>
+            <p><strong>所在地:</strong> 〒${data.full_address}</p>
+            <p><strong>最終更新日:</strong> ${data.update_date}</p>
+        `;
+        
+    } catch (error) {
+        console.error('Fetch corporate info error:', error);
+        modalBody.innerHTML = `<p style="color: red;">エラー: ${error.message}</p>`;
+    }
 }

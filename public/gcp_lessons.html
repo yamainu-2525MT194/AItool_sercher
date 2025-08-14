@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCP学習メモ - AI PM Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="header-placeholder" class="app-header"></header>
+    
+    <main class="container">
+        <div class="static-page-container">
+            <h1>GCP学習メモ：サーバーレスアーキテクチャ</h1>
+            <p>このアプリケーションは、現代的で効率的な「サーバーレス」という考え方で構築されています。以下は、今回利用した主要なGCPサービスとその役割のまとめです。</p>
+
+            <h2>1. Cloud Run: サーバー管理不要のバックエンド</h2>
+            <p><strong>役割</strong>: Pythonで書かれたバックエンドAPIの実行環境です。</p>
+            <p><strong>特徴</strong>: 従来の仮想サーバー（Compute Engine）と違い、私たちがサーバーのOSアップデートやセキュリティ管理をする必要がありません。アクセスがない時は自動で停止（スケール・トゥ・ゼロ）し、アクセスが急増すると自動でサーバーの数を増やしてくれます。これにより、管理の手間なく、コスト効率の良いバックエンドが実現できています。</p>
+            
+            <h2>2. Firebase Hosting: 高速なフロントエンド</h2>
+            <p><strong>役割</strong>: ユーザーが見る画面（HTML/CSS/JS）をインターネットに公開します。</p>
+            <p><strong>特徴</strong>: 世界中に配置されたGoogleのネットワーク（CDN）を利用するため、どこからアクセスしてもWebサイトが高速に表示されます。デプロイもコマンド一つで完了し、非常に簡単です。</p>
+
+            <h2>3. Cloud Scheduler & Firestore: 自動化とデータ保存</h2>
+            <p><strong>役割</strong>: Cloud Schedulerが12時間ごとにCloud Runを呼び出し、Cloud Runが収集・分析したデータをFirestoreに保存します。</p>
+            <p><strong>特徴</strong>: この組み合わせにより、ユーザーアクセスのたびに重い処理をする必要がなくなり、Firestoreからキャッシュ済みのデータを返すだけで済むため、高速な応答が可能です。`Cloud Scheduler`は「目覚まし時計」、`Firestore`は「データの保管庫」の役割を担っています。</p>
+
+            <h2>4. IAM & ポリシー: クラウドの「ルールブック」</h2>
+            <p><strong>役割</strong>: 「誰が」「どのリソースに対して」「何をして良いか」という権限を管理します。</p>
+            <p><strong>特徴</strong>: 今回のデバッグで経験したように、サービスアカウントに必要な権限（ロール）がなかったり、組織のセキュリティポリシー（ルール）が変更されたりすると、コードが正しくてもエラーが発生します。クラウドを安全かつ安定して運用するには、このIAMとポリシーの理解が不可欠です。</p>
+
+            <h2>5. Cloud Build: 開発の自動化 (CI/CD)</h2>
+            <p><strong>役割</strong>: GitHubにコードを保存するだけで、テストとデプロイを自動で行う「ロボット」です。</p>
+            <p><strong>特徴</strong>: 手動でのデプロイ作業をなくし、ヒューマンエラーを防ぎます。コードの品質を保ちながら、素早く安全にサービスを更新していくための現代的な開発フロー（CI/CD）の中核を担います。</p>
+        </div>
+    </main>
+    
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,93 +1,182 @@
 import os
-import time
-from flask import Flask, jsonify
-from flask_cors import CORS
-import feedparser
 import requests
+import feedparser
 import google.generativeai as genai
-from datetime import datetime, timezone
-from itertools import chain
-from concurrent.futures import ThreadPoolExecutor
-from bs4 import BeautifulSoup
+import json # <-- 【重要】この一行を追加しました
+# === ここから法人番号APIの機能をコメントアウト ===
+# import xml.etree.ElementTree as ET
+# from urllib.parse import quote
+# === ここまで ===
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from google.cloud import secretmanager
 
-# data.pyからツールマップのデータを読み込みます
+# backend/data.py からツールデータをインポート
 from data import TOOL_LANDSCAPE_DATA
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # クロスオリジンリクエストを許可する
 
-# --- Part 1: 静的データ（AIツール市場マップ）---
-@app.route("/")
-def get_tool_landscape_handler():
-    """トップページ用の静的なツールマップデータを返す"""
+# --- Secret ManagerからAPIキーを取得する関数 ---
+def get_secret(secret_id, version_id="latest"):
+    """
+    Secret Managerからシークレットの値を取得する
+    """
+    project_id = os.environ.get("GCP_PROJECT")
+    if not project_id:
+        # ローカル環境などでGCP_PROJECTが設定されていない場合のフォールバック
+        # 実際のプロジェクトIDに置き換えてください
+        project_id = "my-ai-news-app-final" 
+
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    try:
+        response = client.access_secret_version(name=name)
+        return response.payload.data.decode("UTF-8")
+    except Exception as e:
+        print(f"Error accessing secret: {e}")
+        return None
+
+# --- エンドポイント定義 ---
+
+# ツールマップのデータを返すエンドポイント
+@app.route('/')
+def index():
     return jsonify(TOOL_LANDSCAPE_DATA)
 
-# --- Part 2: 動的データ（最新AIニュース）---
-def categorize_news(title, content):
-    title_lower = title.lower(); content_lower = content.lower()
-    if any(k in title_lower for k in ["funding", "raised", "investment"]): return "資金調達"
-    if any(k in title_lower for k in ["launches", "releases", "model", "paper"]): return "新技術・リリース"
-    if any(k in content_lower for k in ["google", "openai", "meta", "anthropic", "microsoft"]): return "企業動向"
-    return "一般ニュース"
-
-def get_news_from_feed(url, source_name):
-    items = []
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        
-        # ★★★ ここを修正しました ★★★
-        # 不要な socket_timeout 引数を削除
-        feed = feedparser.parse(url, request_headers=headers)
-        
-        for entry in feed.entries:
-            soup = BeautifulSoup(entry.summary, 'html.parser')
-            clean_content = soup.get_text(separator=' ', strip=True)[:1500]
-            dt = datetime.now(timezone.utc)
-            if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                dt = datetime.fromtimestamp(time.mktime(entry.published_parsed), timezone.utc)
-            category = categorize_news(entry.title, clean_content)
-            items.append({"source": source_name, "title": entry.title, "link": entry.link, "content": clean_content, "published_date": dt, "category": category})
-    except Exception as e:
-        print(f"{source_name}の取得に失敗: {e}")
-    return items
-
-def analyze_for_pm(news_item, gemini_model):
-    if not news_item or not news_item.get('content'): return news_item
-    time.sleep(1)
-    try:
-        prompt = f"以下のAI関連ニュースの重要性を、AIプロダクトマネージャーの視点で150字程度の日本語で分析してください。\n---\nタイトル: {news_item['title']}\n概要: {news_item['content']}"
-        response = gemini_model.generate_content(prompt)
-        news_item['summary'] = response.text.strip().replace('\n', ' ')
-    except Exception as e:
-        print(f"Gemini API Error for '{news_item.get('title')}': {e}")
-        news_item['summary'] = "AIによる分析中にエラーが発生しました。"
-    return news_item
-
-@app.route("/api/news")
-def get_ai_news_handler():
-    """最新ニュースを取得・分析して返す"""
-    api_key = os.environ.get('GEMINI_API_KEY')
-    if not api_key: return jsonify({"error": "APIキーが設定されていません。"}), 500
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-    except Exception as e:
-        return jsonify({"error": f"APIの初期化に失敗しました: {e}"}), 500
+# 最新AIニュースを返すエンドポイント
+@app.route('/api/news')
+def get_news():
+    # (ニュース機能のコードは変更なし)
+    rss_feeds = {
+        "Google AI Blog": "https://ai.googleblog.com/feeds/posts/default",
+        "OpenAI Blog": "https://openai.com/blog/rss.xml",
+        "TechCrunch AI": "https://techcrunch.com/category/artificial-intelligence/feed/",
+    }
     
-    fetch_functions = [
-        get_news_from_feed("https://www.producthunt.com/topics/ai.rss", "Product Hunt"),
-        get_news_from_feed("https://www.bensbites.co/feed", "Ben's Bites"),
-        get_news_from_feed("https://techcrunch.com/category/artificial-intelligence/feed/", "TechCrunch"),
+    all_articles = []
+    for source, url in rss_feeds.items():
+        try:
+            feed = feedparser.parse(url)
+            for entry in feed.entries[:5]: # 各フィードから最新5件を取得
+                all_articles.append({
+                    "source": source,
+                    "title": entry.title,
+                    "link": entry.link,
+                    "published": entry.published,
+                })
+        except Exception as e:
+            print(f"Error fetching RSS feed from {url}: {e}")
+
+    if not all_articles:
+        return jsonify({"error": "Failed to fetch news articles"}), 500
+
+    gemini_api_key = get_secret("GEMINI_API_KEY")
+    if not gemini_api_key:
+        return jsonify({"error": "Gemini API key not found"}), 500
+    
+    genai.configure(api_key=gemini_api_key)
+    model = genai.GenerativeModel('gemini-pro')
+
+    formatted_articles = "\n".join([f"- {a['title']}" for a in all_articles])
+    prompt = f"""
+    以下のAI関連ニュース記事のリストから、AIプロダクトマネージャーにとって最も重要だと考えられるトップ5の記事を選び、その選定理由とPM視点での簡単な分析を日本語で加えてください。
+
+    出力形式は以下のJSON形式のリストのみとしてください。他のテキストは含めないでください。
+    [
+      {{
+        "title": "記事のタイトル",
+        "category": "カテゴリ（例：大規模言語モデル, AI倫理, スタートアップ動向など）",
+        "summary": "PM視点での分析と重要性の解説（100文字程度）"
+      }},
+      ...
     ]
-    with ThreadPoolExecutor(max_workers=len(fetch_functions)) as executor:
-        list_of_lists = executor.map(lambda f: f, fetch_functions)
-        all_news_items = list(chain.from_iterable(list_of_lists))
 
-    all_news_items.sort(key=lambda x: x.get('published_date', datetime.now(timezone.utc)), reverse=True)
-    top_5_news = all_news_items[:5]
-    analyzed_news = [analyze_for_pm(item, model) for item in top_5_news]
-    
-    return jsonify({"news": analyzed_news})
+    ニュース記事リスト:
+    {formatted_articles}
+    """
+
+    try:
+        response = model.generate_content(prompt)
+        # レスポンスからJSON部分を抽出
+        json_response_text = response.text.strip().lstrip("```json").rstrip("```")
+        analyzed_news_list = json.loads(json_response_text)
+        
+        # 元の記事情報とマージ
+        final_news_list = []
+        for analyzed_news in analyzed_news_list:
+            original_article = next((a for a in all_articles if a["title"] == analyzed_news["title"]), None)
+            if original_article:
+                original_article.update(analyzed_news)
+                final_news_list.append(original_article)
+
+        return jsonify({"news": final_news_list})
+    except Exception as e:
+        print(f"Error analyzing news with Gemini: {e}")
+        return jsonify({"error": "Failed to analyze news"}), 500
+
+# === ここから法人番号APIの機能をコメントアウト ===
+# @app.route('/api/corporate_info')
+# def corporate_info():
+#     """
+#     企業名から国税庁APIを使って法人情報を取得するエンドポイント
+#     """
+#     company_name = request.args.get('name')
+#     if not company_name:
+#         return jsonify({"error": "Company name is required"}), 400
+
+#     try:
+#         api_key = get_secret('CORPORATE_API_KEY')
+#         if not api_key:
+#              return jsonify({"error": "API key not configured"}), 500
+
+#         api_url = "https://api.houjin-bangou.nta.go.jp/4/name"
+#         params = {
+#             'id': api_key,
+#             'name': quote(company_name),
+#             'type': '12',
+#             'history': '0'
+#         }
+        
+#         response = requests.get(api_url, params=params)
+#         response.raise_for_status()
+
+#         root = ET.fromstring(response.content)
+#         ns = {'nta': 'http://www.houjin-bangou.nta.go.jp/core'}
+#         corporation = root.find('nta:corporation', ns)
+        
+#         if corporation is None:
+#             return jsonify({"error": "Corporation not found"}), 404
+            
+#         full_address = "{}{}{}".format(
+#             corporation.findtext('nta:prefectureName', '', ns),
+#             corporation.findtext('nta:cityName', '', ns),
+#             corporation.findtext('nta:streetNumber', '', ns)
+#         )
+
+#         info = {
+#             "corporate_number": corporation.findtext('nta:corporateNumber', '', ns),
+#             "name": corporation.findtext('nta:name', '', ns),
+#             "prefecture_name": corporation.findtext('nta:prefectureName', '', ns),
+#             "city_name": corporation.findtext('nta:cityName', '', ns),
+#             "street_number": corporation.findtext('nta:streetNumber', '', ns),
+#             "full_address": full_address,
+#             "update_date": corporation.findtext('nta:updateDate', '', ns),
+#         }
+        
+#         return jsonify(info)
+
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error calling corporate API: {e}")
+#         return jsonify({"error": "Failed to call external API"}), 502
+#     except ET.ParseError as e:
+#         print(f"Error parsing XML: {e}")
+#         return jsonify({"error": "Failed to parse API response"}), 500
+#     except Exception as e:
+#         print(f"An unexpected error occurred: {e}")
+#         return jsonify({"error": "An internal server error occurred"}), 500
+# === ここまで ===
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

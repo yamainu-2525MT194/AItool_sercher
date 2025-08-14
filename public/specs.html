@@ -12,37 +12,67 @@
     <main class="container">
         <div class="static-page-container">
             <h1>「AI Product Manager Dashboard」開発仕様書</h1>
-            <p>最終更新日: 2025年8月13日</p>
+            <p>最終更新日: 2025年8月14日</p>
     
             <h2>1. 概要</h2>
-            <p>本アプリケーションは、AIプロダクトマネージャーを目指すユーザーが必要とする、最新のAI関連情報を戦略的な視点から収集・分析し、ダッシュボード形式で提供するWebアプリケーションです。</p>
+            <p>本アプリケーションは、AIプロダクトマネージャーを目指すユーザーが必要とする情報を戦略的な視点から提供するWebアプリケーションです。最新のAIツール市場の俯瞰、重要ニュースの分析、ツール提供企業の基礎情報などをダッシュボード形式で提供します。</p>
     
             <h2>2. アーキテクチャ</h2>
-            <p>ソースコードをGitHubで管理し、`main`ブランチへのプッシュをトリガーとして、Cloud BuildがテストとCloud Runへのデプロイを自動的に実行します。</p>
-            
-            <h2>3. 技術スタックと利用Googleサービス</h2>
+            <p>Google Cloudのサーバーレスサービスを中心に構築されています。ソースコードはGitHubで管理され、`main`ブランチへのプッシュをトリガーとして、Cloud BuildがテストとCloud Runへのデプロイを自動的に実行するCI/CDパイプラインも構成されています。</p>
+            <ul>
+                <li><strong>フロントエンド:</strong> Firebase Hosting</li>
+                <li><strong>バックエンド:</strong> Google Cloud Run (Python / Flask)</li>
+                <li><strong>データソース (ツールマップ):</strong> <code>backend/data.py</code> 内の静的データ</li>
+                <li><strong>APIキー管理:</strong> Google Cloud Secret Manager</li>
+                <li><strong>CI/CD:</strong> Google Cloud Build</li>
+            </ul>
+
+            <h2>3. 技術スタックとAPI</h2>
             <ul>
                 <li><strong>ソースコード管理</strong>: GitHub</li>
-                <li><strong>CI/CD</strong>: Cloud Build</li>
-                <li><strong>バックエンド</strong>: Python, Flask, Gunicorn (Cloud Run上)</li>
-                <li><strong>フロントエンド</strong>: HTML, CSS, JavaScript (Firebase Hosting上)</li>
+                <li><strong>バックエンド</strong>: Python, Flask, Gunicorn</li>
+                <li><strong>フロントエンド</strong>: HTML, CSS, JavaScript (Vanilla JS)</li>
                 <li><strong>主要Google Cloudサービス</strong>:
                     <ul>
                         <li><strong>Cloud Run</strong>: バックエンドAPIの実行環境。</li>
                         <li><strong>Firebase Hosting</strong>: フロントエンドのホスティング。</li>
+                        <li><strong>Secret Manager</strong>: APIキーの安全な保管。</li>
+                        <li><strong>Cloud Build</strong>: CI/CDの自動化。</li>
+                    </ul>
+                </li>
+                 <li><strong>利用外部API</strong>:
+                    <ul>
                         <li><strong>Gemini API</strong>: ニュースのPM視点での分析。</li>
+                        <li><strong>国税庁 法人番号システムWeb-API</strong>: 企業情報の取得。</li>
+                        <li>各種RSSフィード</li>
                     </ul>
                 </li>
             </ul>
+
+            <h3>バックエンドAPIエンドポイント</h3>
+            <dl>
+                <dt><code>GET /</code></dt>
+                <dd>ツールマップページの全てのカテゴリーとツール情報をJSON形式で返却します。</dd>
+                
+                <dt><code>GET /api/news</code></dt>
+                <dd>複数のRSSフィードから最新ニュースを取得し、Gemini APIで重要度分析と要約を行ったトップ5のニュースを返却します。</dd>
+
+                <dt><code>GET /api/corporate_info</code></dt>
+                <dd>企業名（<code>name</code>クエリパラメータ）を受け取り、国税庁APIを呼び出して企業の公式情報を返却します。(注: 現在はAPIキー認可待ちのため、`main.py`内でコメントアウト中)</dd>
+            </dl>
     
             <h2>4. 保守・運用手順</h2>
             <h3>4.1. 開発フロー</h3>
+            <p>開発やデバッグは主に手動デプロイで行い、確定した変更をGitHubに反映させるフローを推奨します。</p>
             <ol>
                 <li>ローカル環境（Cloud Shellなど）でコードを編集・変更します。</li>
-                <li>変更内容をGitでコミットします。<code>git add .</code>, <code>git commit -m "変更内容"</code></li>
-                <li>GitHubの`main`ブランチにプッシュします。<code>git push origin main</code></li>
-                <li>プッシュをトリガーに、Cloud Buildが自動でテストとデプロイを実行します。</li>
-                <li>Cloud Buildの履歴画面で、ビルドが成功したことを確認します。</li>
+                <li>動作確認のため、手動でCloud RunやFirebase Hostingにデプロイします。
+                    <br>例: <code>gcloud run deploy ai-product-manager-backend --source ./backend ...</code>
+                </li>
+                <li>機能が完成したら、変更内容をGitでコミットし、GitHubの<code>main</code>ブランチにプッシュします。
+                    <br><code>git add .</code>, <code>git commit -m "変更内容"</code>, <code>git push origin main</code>
+                </li>
+                <li>(CI/CD設定時) プッシュをトリガーに、Cloud Buildが自動でテストとデプロイを実行します。</li>
             </ol>
 
             <h3>4.2. GitHubリポジトリとの連携設定</h3>
@@ -50,19 +80,38 @@
             <ol>
                 <li>Google Cloudコンソールの「Cloud Build」ページで「トリガー」を選択します。</li>
                 <li>「リポジトリを接続」をクリックし、画面の指示に従ってGitHubアカウントと対象のリポジトリを接続します。</li>
-                <li>「トリガーを作成」をクリックし、`main`ブランチへのプッシュをトリガーとして設定します。</li>
+                <li>「トリガーを作成」をクリックし、<code>main</code>ブランチへのプッシュをトリガーとして設定します。</li>
                 <li>構成ファイルとしてリポジトリ内の<code>cloudbuild.yaml</code>を指定します。</li>
             </ol>
 
             <h2>5. トラブルシューティング</h2>
-            <h3>5.1. Gitの初期設定とプッシュ失敗</h3>
+
+            <h3>5.1. コード変更が反映されない / 503 Service Unavailableエラー</h3>
+            <p><strong>症状</strong>: <code>data.py</code>等を変更してデプロイしても動作に反映されない。または、サービスURLにアクセスすると「Service Unavailable」と表示され、サーバーがクラッシュしている。</p>
+            <p><strong>原因と解決策</strong>:</p>
+            <ul>
+                <li><strong>原因A: 依存ライブラリの不足 (503エラーの主原因)</strong>
+                    <br><code>main.py</code>で<code>import</code>しているライブラリが、<code>backend/requirements.txt</code>に記載されていない場合、サーバーは起動に失敗しクラッシュします。Cloud Runの「ログ」で<code>ImportError</code>が出ていないか確認し、不足しているライブラリ（例: <code>google-cloud-secret-manager</code>）を<code>requirements.txt</code>に追記してください。
+                </li>
+                <li><strong>原因B: Cloud Buildの強力なキャッシュ</strong>
+                    <br><code>requirements.txt</code>等に触らず<code>data.py</code>のみを変更した場合など、Cloud Buildが変更を軽微だと判断し、古いキャッシュを使ってデプロイすることがあります。この場合、Cloud Runサービスに過去の不正な状態が残っている可能性があります。究極の解決策として、サービスを一度完全に削除し、ゼロから再作成することで問題は100%解決します。
+                    <pre><code># 1. サービスを削除
+gcloud run services delete ai-product-manager-backend --region=asia-northeast1
+
+# 2. サービスを再作成（デプロイコマンドは同じ）
+gcloud run deploy ai-product-manager-backend --source ./backend ...</code></pre>
+                </li>
+            </ul>
+
+            <h3>5.2. Gitの初期設定とプッシュ失敗</h3>
             <p><strong>症状</strong>: <code>git commit</code>でエラーが出る、または<code>git push</code>で認証に失敗する。</p>
             <p><strong>原因と解決策</strong>:</p>
             <ul>
                 <li><strong>ユーザー情報未設定</strong>: <code>git commit</code>が失敗する場合、Gitにユーザー情報が設定されていません。以下のコマンドで設定してください。
-                    <pre><code>git config --global user.name "あなたの名前"\ngit config --global user.email "あなたのアドレス"</code></pre>
+                    <pre><code>git config --global user.name "あなたの名前"
+git config --global user.email "あなたのアドレス"</code></pre>
                 </li>
-                <li><strong>パスワード認証の廃止</strong>: <code>git push</code>で認証に失敗する場合、GitHubはパスワード認証をサポートしていません。代わりに**パーソナルアクセストークン**を使用する必要があります。
+                <li><strong>パスワード認証の廃止</strong>: <code>git push</code>で認証に失敗する場合、GitHubはパスワード認証をサポートしていません。代わりに**パーソナルアクセストークン(PAT)**を使用する必要があります。
                     <ol>
                         <li><a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">GitHubのトークン設定ページ</a>にアクセスします。</li>
                         <li>「Generate new token (classic)」を選択します。</li>
@@ -73,12 +122,13 @@
                 </li>
             </ul>
             
-            <h3>5.2. Cloud Shellでの認証エラー (localhost接続拒否)</h3>
+            <h3>5.3. Cloud Shellでの認証エラー (localhost接続拒否)</h3>
             <p><strong>症状</strong>: <code>gcloud auth login</code> や <code>firebase login</code> を実行した際、ブラウザで<code>localhost</code>への接続が拒否され、認証が完了できない。</p>
             <p><strong>原因</strong>: Cloud Shellはクラウド上のリモート環境であり、ローカルPCのブラウザから直接<code>localhost</code>としてアクセスできないためです。</p>
             <p><strong>解決策</strong>: <code>localhost</code>を使用しない認証オプションをコマンドに追加します。</p>
-            <pre><code>gcloud auth login --no-auth-browser\nfirebase login --no-localhost</code></pre>
-            </div>
+            <pre><code>gcloud auth login --no-auth-browser
+firebase login --no-localhost</code></pre>
+        </div>
     </main>
 
     <script src="app.js"></script>

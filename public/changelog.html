@@ -7,64 +7,47 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header id="header-placeholder" class="app-header"></header>
+    <header id="header-placeholder"></header>
 
     <main class="container">
         <div class="static-page-container">
             <h1>バージョン管理</h1>
-            <div class="version-log">
-    <h2>ver 6.0 <span class="date">(2025/08/13)</span></h2>
-    <ul>
-        <li>CI/CDパイプラインを構築し、GitHubへのプッシュをトリガーとしたテストとデプロイの自動化を実現。</li>
-    </ul>
-</div>
-            <div class="version-log">
-                <h2>ver 5.1 <span class="date">(2025/08/12)</span></h2>
-                <ul>
-                    <li>バックエンドの<code>main.py</code>に残っていたバグ（<code>feedparser</code>ライブラリの不正な引数）を修正し、ニュースフィードが安定して表示されるように最終修正。</li>
-                    <li>静的ツールマップと動的ニュースフィードの機能を1つのバックエンドに統合する最終コードを確定。</li>
-                </ul>
-            </div>
-            <div class="version-log">
-                <h2>ver 5.0 <span class="date">(2025/08/12)</span></h2>
-                <ul>
-                    <li>UI/UXを全面的に改善（レスポンシブデザイン対応）。</li>
-                    <li>ヘッダーとCSSを共通ファイル化し、メンテナンス性を向上。</li>
-                </ul>
-            </div>
-            
-            <div class="version-log">
-                <h2>ver 4.0 <span class="date">(2025/08/12)</span></h2>
-                <ul>
-                    <li>Cloud Runのコールドスタート対策として、最小インスタンスを1に設定。</li>
-                    <li>Cloud SchedulerとCloud Runのタイムアウト時間を延長し、安定性を向上。</li>
-                </ul>
-            </div>
+            <p>このダッシュボードの主な変更履歴です。</p>
     
-            <div class="version-log">
-                <h2>ver 3.0 <span class="date">(2025/08/11)</span></h2>
+            <section class="changelog-entry">
+                <h2>Version 1.2 <span class="changelog-date">(2025年8月14日)</span></h2>
+                <h3>法人番号API連携と安定化</h3>
                 <ul>
-                    <li>キャッシュ機能（Cloud Scheduler, Firestore）を導入し、表示の高速化とAPI利用の効率化を実現。</li>
-                    <li>Googleトレンドの不安定さを解消するため、トレンド機能を「注目企業ランキング」に変更。</li>
+                    <li><strong>【新機能】</strong> ツールマップに「企業情報」ボタンを追加。国税庁APIと連携し、企業の公式情報をポップアップ表示する機能を実装しました。</li>
+                    <li><strong>【改善】</strong> ツールマップのデータ構造をカテゴリ分けされた形式に更新し、より見やすいレイアウトに変更しました。</li>
+                    <li><strong>【バグ修正】</strong> バックエンドのデプロイ時に、コードの変更が反映されないことがある深刻な問題を解決しました。</li>
+                    <li><strong>【バグ修正】</strong> バックエンドの起動時にクラッシュする問題（503エラー）を、不足していたライブラリを追加して修正しました。</li>
+                    <li><strong>【バグ修正】</strong> フロントエンドとバックエンド間の通信エラー（CORS）を修正しました。</li>
+                    <li><strong>【バグ修正】</strong> フロントエンドで発生していた`TypeError`を、JavaScriptの実行タイミングを制御することで修正しました。</li>
                 </ul>
-            </div>
+            </section>
     
-            <div class="version-log">
-                <h2>ver 2.0 <span class="date">(2025/08/11)</span></h2>
-                <ul>
-                    <li>ニュースの自動カテゴリ分類機能を追加。</li>
-                    <li>AIによる分析を、単なる要約から「PM視点での重要性」分析に変更。</li>
-                    <li>UIをダッシュボード形式に刷新し、カテゴリフィルターを追加。</li>
-                </ul>
-            </div>
+            <hr>
     
-            <div class="version-log">
-                <h2>ver 1.0 <span class="date">(2025/08/10)</span></h2>
+            <section class="changelog-entry">
+                <h2>Version 1.1 <span class="changelog-date">(2025年8月10日)</span></h2>
+                <h3>ニュース機能の追加</h3>
                 <ul>
-                    <li>主要なAIニュースサイトのRSSフィードから最新情報を収集する基本機能を実装。</li>
-                    <li>バックエンドをCloud Run、フロントエンドをFirebase Hostingで構築。</li>
+                    <li><strong>【新機能】</strong>「最新ニュース」ページを追加し、複数の外部RSSフィードからAI関連ニュースを取得する機能を実装しました。</li>
+                    <li><strong>【新機能】</strong> Gemini APIと連携し、収集したニュースをPM視点で分析・要約して表示する機能を追加しました。</li>
                 </ul>
-            </div>
+            </section>
+    
+            <hr>
+    
+            <section class="changelog-entry">
+                <h2>Version 1.0 <span class="changelog-date">(2025年8月1日)</span></h2>
+                <h3>初期リリース</h3>
+                <ul>
+                    <li><strong>【新機能】</strong> 静的な「AIツール市場マップ」を表示する基本機能を実装しました。</li>
+                    <li><strong>【新機能】</strong> Google Cloud RunとFirebase Hostingを連携させた、基本的なサーバーレスアーキテクチャを構築しました。</li>
+                </ul>
+            </section>
         </div>
     </main>
     
